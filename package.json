@@ -1,5 +1,5 @@
 {
-  "name": "@post-crawl/node-sdk",
+  "name": "postcrawl",
   "version": "1.0.0",
   "description": "TypeScript SDK for PostCrawl - The Fastest LLM Ready Social Media Crawler",
   "keywords": [
