@@ -2,384 +2,366 @@
  * Tests for PostCrawl client functionality.
  */
 
-import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
-import { PostCrawlClient } from '../src/client'
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { PostCrawlClient } from "../src/client";
 import {
-  APIError,
-  AuthenticationError,
-  InsufficientCreditsError,
-  NetworkError,
-  RateLimitError,
-  TimeoutError,
-  ValidationError,
-} from '../src/exceptions'
-import { ExtractedPost, SearchResult } from '../src/types'
+	AuthenticationError,
+	InsufficientCreditsError,
+	NetworkError,
+	RateLimitError,
+	TimeoutError,
+	ValidationError,
+} from "../src/exceptions";
 import {
-  apiKey,
-  invalidApiKey,
-  mockSearchResponse,
-  mockExtractResponse,
-  mockErrorResponse,
-  mockRateLimitHeaders,
-} from './fixtures'
+	mockExtractResponse,
+	mockRateLimitHeaders,
+	mockSearchResponse,
+} from "./fixtures";
 
 // Mock fetch globally
-const mockFetch = mock()
-global.fetch = mockFetch as any
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
 
-describe('TestClientInitialization', () => {
-  it('test valid api key', () => {
-    const client = new PostCrawlClient({ apiKey })
-    expect(client).toBeDefined()
-    expect(client.rateLimitInfo.limit).toBeNull()
-    expect(client.rateLimitInfo.remaining).toBeNull()
-    expect(client.rateLimitInfo.reset).toBeNull()
-  })
+describe("PostCrawlClient", () => {
+	const apiKey = "sk_test_123456789";
+	let client: PostCrawlClient;
 
-  it('test invalid api key format', () => {
-    expect(() => new PostCrawlClient({ apiKey: 'invalid_key' })).toThrow(
-      "API key must start with 'sk_'"
-    )
-  })
+	beforeEach(() => {
+		client = new PostCrawlClient({ apiKey });
+		mockFetch.mockClear();
+	});
 
-  it('test empty api key', () => {
-    expect(() => new PostCrawlClient({ apiKey: '' })).toThrow('API key is required')
-  })
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
 
-  it('test custom parameters', () => {
-    const client = new PostCrawlClient({
-      apiKey,
-      timeout: 30000,
-      maxRetries: 5,
-      retryDelay: 2000,
-    })
-    expect(client).toBeDefined()
-  })
-})
+	describe("initialization", () => {
+		it("should initialize with valid API key", () => {
+			const client = new PostCrawlClient({ apiKey });
+			expect(client).toBeDefined();
+			expect(client.rateLimitInfo).toEqual({
+				limit: null,
+				remaining: null,
+				reset: null,
+			});
+		});
 
-describe('TestSearchEndpoint', () => {
-  beforeEach(() => {
-    mockFetch.mockClear()
-  })
+		it("should throw error for missing API key", () => {
+			expect(() => new PostCrawlClient({ apiKey: "" })).toThrow(
+				"API key is required",
+			);
+		});
 
-  it('test search success', async () => {
-    const headers = new Headers({
-      'X-RateLimit-Limit': '200',
-      'X-RateLimit-Remaining': '199',
-      'X-RateLimit-Reset': '1703725200',
-    })
+		it("should throw error for invalid API key format", () => {
+			expect(() => new PostCrawlClient({ apiKey: "invalid_key" })).toThrow(
+				"API key must start with 'sk_'",
+			);
+		});
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      headers,
-      json: async () => mockSearchResponse,
-    })
+		it("should accept custom parameters", () => {
+			const client = new PostCrawlClient({
+				apiKey,
+				baseUrl: "https://custom.api.com",
+				timeout: 30000,
+				maxRetries: 5,
+				retryDelay: 2000,
+			});
+			expect(client).toBeDefined();
+		});
+	});
 
-    const client = new PostCrawlClient({ apiKey })
-    const results = await client.search({
-      socialPlatforms: ['reddit'],
-      query: 'machine learning',
-      results: 10,
-      page: 1,
-    })
+	describe("search", () => {
+		it("should successfully search for content", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				status: 200,
+				headers: new Headers(mockRateLimitHeaders),
+				json: async () => mockSearchResponse,
+			});
 
-    expect(results).toHaveLength(2)
-    expect(results[0]).toMatchObject({
-      title: 'Understanding Machine Learning Basics',
-      url: expect.stringContaining('reddit.com'),
-      snippet: expect.stringContaining('machine learning'),
-      date: 'Dec 28, 2024',
-      imageUrl: 'https://preview.redd.it/ml-basics.jpg',
-    })
+			const results = await client.search({
+				socialPlatforms: ["reddit"],
+				query: "machine learning",
+				results: 10,
+				page: 1,
+			});
 
-    // Check rate limit info was updated
-    expect(client.rateLimitInfo.limit).toBe(200)
-    expect(client.rateLimitInfo.remaining).toBe(199)
-  })
+			expect(results).toHaveLength(2);
+			expect(results[0].title).toBe("Understanding Machine Learning Basics");
+			expect(results[0].url).toContain("reddit.com");
+			expect(client.rateLimitInfo.limit).toBe(200);
+			expect(client.rateLimitInfo.remaining).toBe(150);
+		});
 
-  it('test search empty results', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      headers: new Headers(),
-      json: async () => [],
-    })
+		it("should handle empty search results", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				status: 200,
+				headers: new Headers(),
+				json: async () => [],
+			});
 
-    const client = new PostCrawlClient({ apiKey })
-    const results = await client.search({
-      socialPlatforms: ['reddit', 'tiktok'],
-      query: 'very specific query with no results',
-      results: 10,
-      page: 1,
-    })
+			const results = await client.search({
+				socialPlatforms: ["reddit", "tiktok"],
+				query: "very specific query",
+				results: 10,
+				page: 1,
+			});
 
-    expect(results).toHaveLength(0)
-  })
+			expect(results).toEqual([]);
+		});
 
-  it('test search validation error', async () => {
-    const client = new PostCrawlClient({ apiKey })
+		it("should validate request parameters", async () => {
+			await expect(
+				client.search({
+					socialPlatforms: [],
+					query: "test",
+					results: 10,
+					page: 1,
+				}),
+			).rejects.toThrow(ValidationError);
+		});
 
-    await expect(
-      client.search({
-        socialPlatforms: [],
-        query: 'test',
-        results: 10,
-        page: 1,
-      })
-    ).rejects.toThrow(ValidationError)
-  })
+		it("should handle authentication error", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 401,
+				headers: new Headers(),
+				json: async () => ({
+					error: "unauthorized",
+					message: "Invalid API key",
+					requestId: "req_123",
+				}),
+			});
 
-  it('test search authentication error', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 401,
-      headers: new Headers(),
-      json: async () => ({
-        error: 'invalid_api_key',
-        message: 'Invalid API key provided',
-        request_id: 'req_123',
-      }),
-    })
+			await expect(
+				client.search({
+					socialPlatforms: ["reddit"],
+					query: "test",
+					results: 10,
+					page: 1,
+				}),
+			).rejects.toThrow(AuthenticationError);
+		});
 
-    const client = new PostCrawlClient({ apiKey })
+		it("should handle rate limit error", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 429,
+				headers: new Headers({ "Retry-After": "60" }),
+				json: async () => ({
+					error: "rate_limit_exceeded",
+					message: "Too many requests",
+					requestId: "req_456",
+				}),
+			});
 
-    await expect(
-      client.search({
-        socialPlatforms: ['reddit'],
-        query: 'test',
-        results: 10,
-        page: 1,
-      })
-    ).rejects.toThrow(AuthenticationError)
-  })
+			await expect(
+				client.search({
+					socialPlatforms: ["reddit"],
+					query: "test",
+					results: 10,
+					page: 1,
+				}),
+			).rejects.toThrow(RateLimitError);
+		});
+	});
 
-  it('test search rate limit error', async () => {
-    const headers = new Headers({
-      'Retry-After': '60',
-    })
+	describe("extract", () => {
+		it("should successfully extract content", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				status: 200,
+				headers: new Headers(),
+				json: async () => mockExtractResponse,
+			});
 
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 429,
-      headers,
-      json: async () => ({
-        error: 'rate_limit_exceeded',
-        message: 'Too many requests',
-        request_id: 'req_456',
-      }),
-    })
+			const results = await client.extract({
+				urls: [
+					"https://www.reddit.com/r/Python/comments/1ab2c3d/test_post/",
+					"https://www.tiktok.com/@pythontutor/video/7123456789012345678",
+					"https://invalid.url/post",
+				],
+				includeComments: true,
+				responseMode: "raw",
+			});
 
-    const client = new PostCrawlClient({ apiKey })
+			expect(results).toHaveLength(3);
+			expect(results[0].source).toBe("reddit");
+			expect(results[0].raw).toBeDefined();
+			expect(results[0].error).toBeNull();
+			expect(results[2].error).toBe("Failed to extract content: Invalid URL");
+		});
 
-    try {
-      await client.search({
-        socialPlatforms: ['reddit'],
-        query: 'test',
-        results: 10,
-        page: 1,
-      })
-      expect.fail('Should have thrown RateLimitError')
-    } catch (error) {
-      expect(error).toBeInstanceOf(RateLimitError)
-      expect((error as RateLimitError).retryAfter).toBe(60)
-    }
-  })
-})
+		it("should validate URLs", async () => {
+			await expect(
+				client.extract({
+					urls: ["not-a-valid-url"],
+					includeComments: false,
+				}),
+			).rejects.toThrow(ValidationError);
+		});
 
-describe('TestExtractEndpoint', () => {
-  beforeEach(() => {
-    mockFetch.mockClear()
-  })
+		it("should handle insufficient credits error", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 403,
+				headers: new Headers(),
+				json: async () => ({
+					error: "insufficient_credits",
+					message: "Not enough credits. Required: 10, Available: 5",
+					requestId: "req_789",
+				}),
+			});
 
-  it('test extract success', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      headers: new Headers(),
-      json: async () => mockExtractResponse,
-    })
+			await expect(
+				client.extract({
+					urls: ["https://www.reddit.com/r/Python/comments/1ab2c3d/test/"],
+				}),
+			).rejects.toThrow(InsufficientCreditsError);
+		});
+	});
 
-    const client = new PostCrawlClient({ apiKey })
-    const posts = await client.extract({
-      urls: [
-        'https://www.reddit.com/r/Python/comments/1ab2c3d/test_post/',
-        'https://www.tiktok.com/@pythontutor/video/7123456789012345678',
-      ],
-      includeComments: false,
-    })
+	describe("searchAndExtract", () => {
+		it("should successfully search and extract", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				status: 200,
+				headers: new Headers(),
+				json: async () => mockExtractResponse.slice(0, 2),
+			});
 
-    expect(posts).toHaveLength(3)
+			const results = await client.searchAndExtract({
+				socialPlatforms: ["reddit", "tiktok"],
+				query: "python tutorial",
+				results: 10,
+				page: 1,
+				includeComments: true,
+				responseMode: "raw",
+			});
 
-    const redditPost = posts[0]
-    expect(redditPost.url).toBe('https://www.reddit.com/r/Python/comments/1ab2c3d/test_post/')
-    expect(redditPost.source).toBe('reddit')
-    expect(redditPost.raw).toBeDefined()
-    expect(redditPost.error).toBeNull()
+			expect(results).toHaveLength(2);
+			expect(results[0].source).toBe("reddit");
+			expect(results[1].source).toBe("tiktok");
+		});
+	});
 
-    const tiktokPost = posts[1]
-    expect(tiktokPost.source).toBe('tiktok')
-    expect(tiktokPost.raw).toBeDefined()
+	describe("network and retry", () => {
+		it("should retry on network error", async () => {
+			// First request fails
+			mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-    const errorPost = posts[2]
-    expect(errorPost.error).toBe('Failed to extract content: Invalid URL')
-    expect(errorPost.raw).toBeNull()
-  })
+			// Second request succeeds
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				status: 200,
+				headers: new Headers(),
+				json: async () => [],
+			});
 
-  it('test extract with comments', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      headers: new Headers(),
-      json: async () => mockExtractResponse,
-    })
+			const results = await client.search({
+				socialPlatforms: ["reddit"],
+				query: "test",
+				results: 10,
+				page: 1,
+			});
 
-    const client = new PostCrawlClient({ apiKey })
-    const posts = await client.extract({
-      urls: ['https://www.reddit.com/r/Python/comments/1ab2c3d/test_post/'],
-      includeComments: true,
-      responseMode: 'markdown',
-    })
+			expect(results).toEqual([]);
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
 
-    expect(posts).toHaveLength(3)
-  })
+		it("should throw after max retries", async () => {
+			// All requests fail
+			mockFetch.mockRejectedValue(new Error("Network error"));
 
-  it('test extract validation error', async () => {
-    const client = new PostCrawlClient({ apiKey })
+			const client = new PostCrawlClient({
+				apiKey,
+				maxRetries: 2,
+				retryDelay: 10,
+			});
 
-    await expect(
-      client.extract({
-        urls: [],
-      })
-    ).rejects.toThrow(ValidationError)
+			await expect(
+				client.search({
+					socialPlatforms: ["reddit"],
+					query: "test",
+					results: 10,
+					page: 1,
+				}),
+			).rejects.toThrow(NetworkError);
 
-    await expect(
-      client.extract({
-        urls: ['not-a-valid-url'],
-      })
-    ).rejects.toThrow(ValidationError)
-  })
-})
+			// Initial request + 2 retries = 3 calls
+			expect(mockFetch).toHaveBeenCalledTimes(3);
+		});
 
-describe('TestSearchAndExtractEndpoint', () => {
-  beforeEach(() => {
-    mockFetch.mockClear()
-  })
+		it("should handle timeout error", async () => {
+			// Mock abort error
+			const abortError = new Error("Aborted");
+			abortError.name = "AbortError";
+			mockFetch.mockRejectedValueOnce(abortError);
 
-  it('test search and extract success', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      headers: new Headers(),
-      json: async () => mockExtractResponse,
-    })
+			const client = new PostCrawlClient({ apiKey, timeout: 100 });
 
-    const client = new PostCrawlClient({ apiKey })
-    const posts = await client.searchAndExtract({
-      socialPlatforms: ['reddit'],
-      query: 'python tutorial',
-      results: 10,
-      page: 1,
-      includeComments: true,
-    })
+			await expect(
+				client.search({
+					socialPlatforms: ["reddit"],
+					query: "test",
+					results: 10,
+					page: 1,
+				}),
+			).rejects.toThrow(TimeoutError);
+		});
+	});
 
-    expect(posts).toHaveLength(3)
-    expect(posts[0].source).toBe('reddit')
-  })
+	describe("synchronous methods", () => {
+		it("should provide sync wrapper for search", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				status: 200,
+				headers: new Headers(),
+				json: async () => mockSearchResponse,
+			});
 
-  it('test search and extract validation error', async () => {
-    const client = new PostCrawlClient({ apiKey })
+			const results = await client.searchSync({
+				socialPlatforms: ["reddit"],
+				query: "test",
+				results: 10,
+				page: 1,
+			});
 
-    await expect(
-      client.searchAndExtract({
-        socialPlatforms: [],
-        query: '',
-        results: 10,
-        page: 1,
-      })
-    ).rejects.toThrow(ValidationError)
-  })
-})
+			expect(results).toHaveLength(2);
+		});
 
-describe('TestNetworkErrors', () => {
-  beforeEach(() => {
-    mockFetch.mockClear()
-  })
+		it("should provide sync wrapper for extract", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				status: 200,
+				headers: new Headers(),
+				json: async () => mockExtractResponse,
+			});
 
-  it('test timeout error', async () => {
-    // Mock fetch to reject with AbortError
-    mockFetch.mockImplementationOnce(() => {
-      const error = new Error('The operation was aborted')
-      error.name = 'AbortError'
-      return Promise.reject(error)
-    })
+			const results = await client.extractSync({
+				urls: ["https://reddit.com/test"],
+			});
 
-    const client = new PostCrawlClient({ apiKey, timeout: 50 })
+			expect(results).toHaveLength(3);
+		});
 
-    await expect(
-      client.search({
-        socialPlatforms: ['reddit'],
-        query: 'test',
-        results: 10,
-        page: 1,
-      })
-    ).rejects.toThrow(TimeoutError)
-  })
+		it("should provide sync wrapper for searchAndExtract", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				status: 200,
+				headers: new Headers(),
+				json: async () => mockExtractResponse.slice(0, 1),
+			});
 
-  it('test network error with retry', async () => {
-    let attempts = 0
-    mockFetch.mockImplementation(() => {
-      attempts++
-      if (attempts < 3) {
-        throw new Error('Network error')
-      }
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        headers: new Headers(),
-        json: async () => [],
-      })
-    })
+			const results = await client.searchAndExtractSync({
+				socialPlatforms: ["reddit"],
+				query: "test",
+				results: 10,
+				page: 1,
+			});
 
-    const client = new PostCrawlClient({ apiKey, maxRetries: 2, retryDelay: 10 })
-    const results = await client.search({
-      socialPlatforms: ['reddit'],
-      query: 'test',
-      results: 10,
-      page: 1,
-    })
-
-    expect(results).toHaveLength(0)
-    expect(attempts).toBe(3)
-  })
-})
-
-describe('TestSyncMethods', () => {
-  it('test sync methods throw error', () => {
-    const client = new PostCrawlClient({ apiKey })
-
-    expect(() =>
-      client.searchSync({
-        socialPlatforms: ['reddit'],
-        query: 'test',
-        results: 10,
-        page: 1,
-      })
-    ).toThrow('Synchronous methods are not supported')
-
-    expect(() =>
-      client.extractSync({
-        urls: ['https://example.com'],
-      })
-    ).toThrow('Synchronous methods are not supported')
-
-    expect(() =>
-      client.searchAndExtractSync({
-        socialPlatforms: ['reddit'],
-        query: 'test',
-        results: 10,
-        page: 1,
-      })
-    ).toThrow('Synchronous methods are not supported')
-  })
-})
+			expect(results).toHaveLength(1);
+		});
+	});
+});

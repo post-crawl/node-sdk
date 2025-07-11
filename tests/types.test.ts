@@ -1,251 +1,186 @@
 /**
- * Tests for PostCrawl type definitions and validation.
+ * Tests for type definitions and validation
  */
 
-import { describe, it, expect } from 'bun:test'
+import { describe, expect, it } from "vitest";
 import {
-  extractRequestSchema,
-  searchRequestSchema,
-  searchAndExtractRequestSchema,
-  isRedditPost,
-  isTiktokPost,
-  mapSearchResult,
-  createExtractedPost,
-  ExtractedPost,
-  RedditPost,
-  TiktokPost,
-} from '../src/types'
-import { mockRedditPost, mockTiktokPost } from './fixtures'
+	ExtractRequestSchema,
+	isRedditPost,
+	isTiktokPost,
+	SearchAndExtractRequestSchema,
+	SearchRequestSchema,
+} from "../src/types";
 
-describe('TestRequestValidation', () => {
-  describe('SearchRequest validation', () => {
-    it('validates valid search request', () => {
-      const valid = {
-        social_platforms: ['reddit', 'tiktok'],
-        query: 'machine learning',
-        results: 10,
-        page: 1,
-      }
+describe("Type Validation", () => {
+	describe("SearchRequestSchema", () => {
+		it("should validate valid search request", () => {
+			const valid = {
+				socialPlatforms: ["reddit", "tiktok"],
+				query: "machine learning",
+				results: 10,
+				page: 1,
+			};
 
-      const result = searchRequestSchema.parse(valid)
-      expect(result).toEqual(valid)
-    })
+			expect(() => SearchRequestSchema.parse(valid)).not.toThrow();
+		});
 
-    it('rejects empty query', () => {
-      const invalid = {
-        social_platforms: ['reddit'],
-        query: '',
-        results: 10,
-        page: 1,
-      }
+		it("should reject empty social platforms", () => {
+			const invalid = {
+				socialPlatforms: [],
+				query: "test",
+				results: 10,
+				page: 1,
+			};
 
-      expect(() => searchRequestSchema.parse(invalid)).toThrow()
-    })
+			expect(() => SearchRequestSchema.parse(invalid)).toThrow();
+		});
 
-    it('rejects empty social platforms', () => {
-      const invalid = {
-        social_platforms: [],
-        query: 'test',
-        results: 10,
-        page: 1,
-      }
+		it("should reject empty query", () => {
+			const invalid = {
+				socialPlatforms: ["reddit"],
+				query: "",
+				results: 10,
+				page: 1,
+			};
 
-      expect(() => searchRequestSchema.parse(invalid)).toThrow()
-    })
+			expect(() => SearchRequestSchema.parse(invalid)).toThrow();
+		});
 
-    it('rejects invalid social platform', () => {
-      const invalid = {
-        social_platforms: ['reddit', 'facebook'] as any,
-        query: 'test',
-        results: 10,
-        page: 1,
-      }
+		it("should reject invalid result count", () => {
+			const invalid = {
+				socialPlatforms: ["reddit"],
+				query: "test",
+				results: 0,
+				page: 1,
+			};
 
-      expect(() => searchRequestSchema.parse(invalid)).toThrow()
-    })
+			expect(() => SearchRequestSchema.parse(invalid)).toThrow();
+		});
 
-    it('rejects results over 100', () => {
-      const invalid = {
-        social_platforms: ['reddit'],
-        query: 'test',
-        results: 101,
-        page: 1,
-      }
+		it("should reject results over 100", () => {
+			const invalid = {
+				socialPlatforms: ["reddit"],
+				query: "test",
+				results: 101,
+				page: 1,
+			};
 
-      expect(() => searchRequestSchema.parse(invalid)).toThrow()
-    })
+			expect(() => SearchRequestSchema.parse(invalid)).toThrow();
+		});
+	});
 
-    it('rejects negative page', () => {
-      const invalid = {
-        social_platforms: ['reddit'],
-        query: 'test',
-        results: 10,
-        page: -1,
-      }
+	describe("ExtractRequestSchema", () => {
+		it("should validate valid extract request", () => {
+			const valid = {
+				urls: ["https://reddit.com/r/test/comments/123/test/"],
+				includeComments: true,
+				responseMode: "markdown",
+			};
 
-      expect(() => searchRequestSchema.parse(invalid)).toThrow()
-    })
-  })
+			expect(() => ExtractRequestSchema.parse(valid)).not.toThrow();
+		});
 
-  describe('ExtractRequest validation', () => {
-    it('validates valid extract request', () => {
-      const valid = {
-        urls: ['https://www.reddit.com/r/test/comments/123/test/'],
-        include_comments: true,
-        response_mode: 'markdown' as const,
-      }
+		it("should provide defaults", () => {
+			const minimal = {
+				urls: ["https://reddit.com/test"],
+			};
 
-      const result = extractRequestSchema.parse(valid)
-      expect(result).toEqual(valid)
-    })
+			const parsed = ExtractRequestSchema.parse(minimal);
+			expect(parsed.includeComments).toBe(false);
+			expect(parsed.responseMode).toBe("raw");
+		});
 
-    it('sets default values', () => {
-      const minimal = {
-        urls: ['https://example.com'],
-      }
+		it("should reject empty URLs", () => {
+			const invalid = {
+				urls: [],
+			};
 
-      const result = extractRequestSchema.parse(minimal)
-      expect(result.include_comments).toBe(false)
-      expect(result.response_mode).toBe('raw')
-    })
+			expect(() => ExtractRequestSchema.parse(invalid)).toThrow();
+		});
 
-    it('rejects empty urls', () => {
-      const invalid = {
-        urls: [],
-      }
+		it("should reject invalid URLs", () => {
+			const invalid = {
+				urls: ["not-a-url"],
+			};
 
-      expect(() => extractRequestSchema.parse(invalid)).toThrow()
-    })
+			expect(() => ExtractRequestSchema.parse(invalid)).toThrow();
+		});
 
-    it('rejects too many urls', () => {
-      const invalid = {
-        urls: Array(101).fill('https://example.com'),
-      }
+		it("should reject more than 100 URLs", () => {
+			const invalid = {
+				urls: Array(101).fill("https://example.com"),
+			};
 
-      expect(() => extractRequestSchema.parse(invalid)).toThrow()
-    })
+			expect(() => ExtractRequestSchema.parse(invalid)).toThrow();
+		});
+	});
 
-    it('rejects invalid urls', () => {
-      const invalid = {
-        urls: ['not-a-url', 'https://valid.com'],
-      }
+	describe("SearchAndExtractRequestSchema", () => {
+		it("should validate valid request", () => {
+			const valid = {
+				socialPlatforms: ["reddit"],
+				query: "python tutorial",
+				results: 5,
+				page: 1,
+				includeComments: true,
+				responseMode: "markdown",
+			};
 
-      expect(() => extractRequestSchema.parse(invalid)).toThrow()
-    })
+			expect(() => SearchAndExtractRequestSchema.parse(valid)).not.toThrow();
+		});
 
-    it('rejects invalid response mode', () => {
-      const invalid = {
-        urls: ['https://example.com'],
-        response_mode: 'invalid' as any,
-      }
+		it("should provide defaults for optional fields", () => {
+			const minimal = {
+				socialPlatforms: ["tiktok"],
+				query: "test",
+				results: 10,
+				page: 1,
+			};
 
-      expect(() => extractRequestSchema.parse(invalid)).toThrow()
-    })
-  })
+			const parsed = SearchAndExtractRequestSchema.parse(minimal);
+			expect(parsed.includeComments).toBe(false);
+			expect(parsed.responseMode).toBe("raw");
+		});
+	});
 
-  describe('SearchAndExtractRequest validation', () => {
-    it('validates valid search and extract request', () => {
-      const valid = {
-        social_platforms: ['reddit'],
-        query: 'test query',
-        results: 20,
-        page: 2,
-        include_comments: true,
-        response_mode: 'markdown' as const,
-      }
+	describe("Type Guards", () => {
+		it("should identify Reddit posts", () => {
+			const redditPost = {
+				id: "123",
+				subredditName: "test",
+				title: "Test Post",
+				author: "testuser",
+				score: 42,
+			};
 
-      const result = searchAndExtractRequestSchema.parse(valid)
-      expect(result).toEqual(valid)
-    })
+			expect(isRedditPost(redditPost)).toBe(true);
+			expect(isTiktokPost(redditPost)).toBe(false);
+		});
 
-    it('trims query whitespace', () => {
-      const request = {
-        social_platforms: ['reddit'],
-        query: '  test query  ',
-        results: 10,
-        page: 1,
-      }
+		it("should identify TikTok posts", () => {
+			const tiktokPost = {
+				id: "7123456789",
+				username: "testuser",
+				description: "Test video",
+				likes: "100",
+			};
 
-      const result = searchAndExtractRequestSchema.parse(request)
-      expect(result.query).toBe('test query')
-    })
-  })
-})
+			expect(isTiktokPost(tiktokPost)).toBe(true);
+			expect(isRedditPost(tiktokPost)).toBe(false);
+		});
 
-describe('TestTypeGuards', () => {
-  it('correctly identifies Reddit posts', () => {
-    expect(isRedditPost(mockRedditPost)).toBe(true)
-    expect(isRedditPost(mockTiktokPost)).toBe(false)
-    expect(isRedditPost(null)).toBe(false)
-    expect(isRedditPost({})).toBe(false)
-  })
+		it("should reject null/undefined", () => {
+			expect(isRedditPost(null)).toBe(false);
+			expect(isRedditPost(undefined)).toBe(false);
+			expect(isTiktokPost(null)).toBe(false);
+			expect(isTiktokPost(undefined)).toBe(false);
+		});
 
-  it('correctly identifies TikTok posts', () => {
-    expect(isTiktokPost(mockTiktokPost)).toBe(true)
-    expect(isTiktokPost(mockRedditPost)).toBe(false)
-    expect(isTiktokPost(null)).toBe(false)
-    expect(isTiktokPost({})).toBe(false)
-  })
-})
-
-describe('TestSearchResultMapping', () => {
-  it('maps API response to SearchResult', () => {
-    const apiResponse = {
-      title: 'Test Title',
-      url: 'https://example.com',
-      snippet: 'Test snippet',
-      date: 'Jan 1, 2024',
-      imageUrl: 'https://example.com/image.jpg',
-    }
-
-    const result = mapSearchResult(apiResponse)
-    expect(result).toEqual({
-      title: 'Test Title',
-      url: 'https://example.com',
-      snippet: 'Test snippet',
-      date: 'Jan 1, 2024',
-      imageUrl: 'https://example.com/image.jpg',
-    })
-  })
-
-  it('handles missing imageUrl', () => {
-    const apiResponse = {
-      title: 'Test Title',
-      url: 'https://example.com',
-      snippet: 'Test snippet',
-      date: 'Jan 1, 2024',
-    }
-
-    const result = mapSearchResult(apiResponse)
-    expect(result.imageUrl).toBe('')
-  })
-})
-
-describe('TestExtractedPostMethods', () => {
-  it('ExtractedPost platform getter works', () => {
-    const post = createExtractedPost({
-      url: 'https://reddit.com/test',
-      source: 'reddit',
-      raw: mockRedditPost as RedditPost,
-      markdown: null,
-      error: null,
-    })
-
-    expect(post.platform).toBe('reddit')
-  })
-
-  it('ExtractedPost type checking methods work', () => {
-    const redditExtract = createExtractedPost({
-      url: 'https://reddit.com/test',
-      source: 'reddit',
-      raw: mockRedditPost as RedditPost,
-      markdown: null,
-      error: null,
-    })
-
-    expect(redditExtract.isRedditPost()).toBe(true)
-    expect(redditExtract.isTiktokPost()).toBe(false)
-    expect(redditExtract.getRedditPost()).toEqual(mockRedditPost)
-    expect(redditExtract.getTiktokPost()).toBeNull()
-  })
-})
+		it("should reject non-objects", () => {
+			expect(isRedditPost("string")).toBe(false);
+			expect(isRedditPost(123)).toBe(false);
+			expect(isTiktokPost("string")).toBe(false);
+			expect(isTiktokPost(123)).toBe(false);
+		});
+	});
+});

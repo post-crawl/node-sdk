@@ -7,14 +7,14 @@ Official Node.js/TypeScript SDK for [PostCrawl](https://postcrawl.com) - The Fas
 - 🔍 **Search** across Reddit and TikTok with advanced filtering
 - 📊 **Extract** content from social media URLs with optional comments
 - 🚀 **Combined search and extract** in a single operation
-- 🏷️ **Type-safe** with TypeScript and Zod validation
-- ⚡ **Async/await** support with Promise-based API
+- 🏷️ **Type-safe** with full TypeScript support and Zod validation
+- ⚡ **Promise-based** API with async/await support
 - 🛡️ **Comprehensive error handling** with detailed exceptions
 - 📈 **Rate limiting** support with credit tracking
 - 🔄 **Automatic retries** for network errors
-- 🎯 **Platform-specific models** for Reddit and TikTok data with strong typing
+- 🎯 **Platform-specific types** for Reddit and TikTok data
 - 📝 **Rich content formatting** with markdown support
-- 🐍 **Node.js 18+** with modern ES modules and CommonJS support
+- 🌐 **ESM and CommonJS** support for maximum compatibility
 
 ## Installation
 
@@ -55,274 +55,286 @@ bun add dotenv
 ## Requirements
 
 - Node.js 18.0 or higher
-- TypeScript 5.0+ (for TypeScript users)
+- PostCrawl API key ([Get one for free](https://postcrawl.com))
 
 ## Quick Start
 
+### Basic Usage
 ```typescript
-import { PostCrawlClient } from 'postcrawl'
+import { PostCrawlClient } from 'postcrawl';
 
-// Initialize the client
+// Initialize the client with your API key
 const client = new PostCrawlClient({
-  apiKey: 'sk_your_api_key_here',
-})
+  apiKey: 'sk_your_api_key_here'
+});
 
 // Search for content
-const searchResults = await client.search({
-  socialPlatforms: ['reddit', 'tiktok'],
-  query: 'artificial intelligence',
+const results = await client.search({
+  socialPlatforms: ['reddit'],
+  query: 'machine learning',
   results: 10,
-  page: 1,
-})
+  page: 1
+});
 
+// Process results
+for (const post of results) {
+  console.log(`${post.title} - ${post.url}`);
+  console.log(`  Date: ${post.date}`);
+  console.log(`  Snippet: ${post.snippet.substring(0, 100)}...`);
+}
+```
+
+### Extract Content
+```typescript
 // Extract content from URLs
 const posts = await client.extract({
   urls: [
-    'https://www.reddit.com/r/technology/comments/...',
-    'https://www.tiktok.com/@user/video/...',
+    'https://reddit.com/r/...',
+    'https://tiktok.com/@...'
   ],
   includeComments: true,
-})
+  responseMode: 'raw'
+});
 
-// Search and extract in one operation
-const extractedPosts = await client.searchAndExtract({
-  socialPlatforms: ['reddit'],
-  query: 'machine learning tutorials',
-  results: 5,
-  page: 1,
-  includeComments: true,
-})
+// Process extracted posts
+for (const post of posts) {
+  if (post.error) {
+    console.error(`Failed to extract ${post.url}: ${post.error}`);
+  } else {
+    console.log(`Extracted from ${post.source}: ${post.url}`);
+  }
+}
 ```
 
 ## API Reference
 
-### Client Initialization
-
-```typescript
-const client = new PostCrawlClient({
-  apiKey: string,           // Required: Your PostCrawl API key (starts with 'sk_')
-  timeout?: number,         // Optional: Request timeout in ms (default: 90000)
-  maxRetries?: number,      // Optional: Max retry attempts (default: 3)
-  retryDelay?: number,      // Optional: Delay between retries in ms (default: 1000)
-})
-```
-
 ### Search
-
-Search for content across social media platforms.
-
 ```typescript
 const results = await client.search({
-  socialPlatforms: ['reddit', 'tiktok'],  // Platforms to search
-  query: 'your search query',             // Search query
-  results: 10,                            // Number of results (max 100)
-  page: 1,                                // Page number (starts at 1)
-})
-
-// Returns: SearchResult[]
-// {
-//   title: string
-//   url: string
-//   snippet: string
-//   date: string
-//   imageUrl: string
-// }
+  socialPlatforms: ['reddit', 'tiktok'],
+  query: 'your search query',
+  results: 10,  // 1-100
+  page: 1       // pagination
+});
 ```
 
 ### Extract
-
-Extract content from social media URLs.
-
 ```typescript
 const posts = await client.extract({
-  urls: ['url1', 'url2'],           // URLs to extract (max 100)
-  includeComments?: boolean,        // Include comments (default: false)
-  responseMode?: 'raw' | 'markdown' // Response format (default: 'raw')
-})
-
-// Returns: ExtractedPost[]
-// {
-//   url: string
-//   source: 'reddit' | 'tiktok'
-//   raw?: RedditPost | TiktokPost
-//   markdown?: string
-//   error?: string
-// }
+  urls: ['https://reddit.com/...', 'https://tiktok.com/...'],
+  includeComments: true,
+  responseMode: 'raw'  // or 'markdown'
+});
 ```
 
 ### Search and Extract
-
-Combine search and extraction in a single operation.
-
 ```typescript
 const posts = await client.searchAndExtract({
-  socialPlatforms: ['reddit', 'tiktok'],
-  query: 'your search query',
-  results: 10,
+  socialPlatforms: ['reddit'],
+  query: 'search query',
+  results: 5,
   page: 1,
-  includeComments?: boolean,
-  responseMode?: 'raw' | 'markdown'
-})
+  includeComments: false,
+  responseMode: 'markdown'
+});
 ```
 
-## Type-Safe Platform Data
+## Examples
 
-The SDK provides strongly-typed platform-specific data models:
+Check out the `examples/` directory for complete working examples:
+- `search_101.ts` - Basic search functionality demo
+- `extract_101.ts` - Content extraction demo
+- `search_and_extract_101.ts` - Combined operation demo
 
-### Reddit Post
-```typescript
-interface RedditPost {
-  id: string
-  title: string
-  subredditName: string
-  description: string
-  url: string
-  upvotes: number
-  downvotes: number
-  score: number
-  createdAt: string
-  comments?: RedditComment[]
-}
+Run examples with:
+```bash
+# Using bun (recommended)
+bun run examples
+
+# Or run individual examples
+bun run example:search
+bun run example:extract
+bun run example:sne
+
+# Using Node.js with tsx
+npx tsx examples/search_101.ts
 ```
 
-### TikTok Post
+## Response Models
+
+### SearchResult
+Response from the search endpoint:
+- `title`: Title of the search result
+- `url`: URL of the search result
+- `snippet`: Text snippet from the content
+- `date`: Date of the post (e.g., "Dec 28, 2024")
+- `imageUrl`: URL of associated image (can be empty string)
+
+### ExtractedPost
+- `url`: Original URL
+- `source`: Platform name ("reddit" or "tiktok")
+- `raw`: Raw content data (RedditPost or TiktokPost object) - strongly typed
+- `markdown`: Markdown formatted content (when responseMode="markdown")
+- `error`: Error message if extraction failed
+
+## Working with Platform-Specific Types
+
+The SDK provides type-safe access to platform-specific data:
+
 ```typescript
-interface TiktokPost {
-  id: string
-  username: string
-  description: string
-  url: string
-  likes: string
-  totalComments: number
-  hashtags: string[]
-  createdAt: string
-  comments?: TiktokComment[]
+import { PostCrawlClient, isRedditPost, isTiktokPost } from 'postcrawl';
+
+// Extract content with proper type handling
+const posts = await client.extract({
+  urls: ['https://reddit.com/...']
+});
+
+for (const post of posts) {
+  if (post.error) {
+    console.error(`Error: ${post.error}`);
+  } else if (isRedditPost(post.raw)) {
+    // Access Reddit-specific fields with camelCase
+    console.log(`Subreddit: r/${post.raw.subredditName}`);
+    console.log(`Score: ${post.raw.score}`);
+    console.log(`Title: ${post.raw.title}`);
+    console.log(`Upvotes: ${post.raw.upvotes}`);
+    console.log(`Created: ${post.raw.createdAt}`);
+    if (post.raw.comments) {
+      console.log(`Comments: ${post.raw.comments.length}`);
+    }
+  } else if (isTiktokPost(post.raw)) {
+    // Access TikTok-specific fields with camelCase
+    console.log(`Username: @${post.raw.username}`);
+    console.log(`Likes: ${post.raw.likes}`);
+    console.log(`Total Comments: ${post.raw.totalComments}`);
+    console.log(`Created: ${post.raw.createdAt}`);
+    if (post.raw.hashtags) {
+      console.log(`Hashtags: ${post.raw.hashtags.join(', ')}`);
+    }
+  }
 }
 ```
 
 ## Error Handling
 
-The SDK provides detailed error types for different scenarios:
-
 ```typescript
 import {
-  AuthenticationError,
-  InsufficientCreditsError,
-  RateLimitError,
-  ValidationError,
-  NetworkError,
-  TimeoutError,
-} from 'postcrawl'
+  AuthenticationError,      // Invalid API key
+  InsufficientCreditsError, // Not enough credits
+  RateLimitError,          // Rate limit exceeded
+  ValidationError          // Invalid parameters
+} from 'postcrawl';
 
 try {
-  const results = await client.search({...})
+  const results = await client.search({ ... });
 } catch (error) {
   if (error instanceof AuthenticationError) {
-    console.error('Invalid API key')
+    console.error('Invalid API key');
   } else if (error instanceof InsufficientCreditsError) {
-    console.error('Not enough credits')
+    console.error('Insufficient credits:', error.requiredCredits);
   } else if (error instanceof RateLimitError) {
-    console.error(`Rate limited. Retry after: ${error.retryAfter}s`)
+    console.error(`Rate limited. Retry after ${error.retryAfter}s`);
   } else if (error instanceof ValidationError) {
-    console.error('Invalid parameters:', error.details)
+    console.error('Validation errors:', error.details);
   }
 }
 ```
 
-## Rate Limiting
+## Development
 
-The client automatically tracks rate limit information:
+This project uses [Bun](https://bun.sh) as the primary runtime and package manager. See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed setup and contribution guidelines.
 
-```typescript
-// After any API call
-console.log(client.rateLimitInfo)
-// {
-//   limit: 200,
-//   remaining: 199,
-//   reset: 1703725200
-// }
+### Quick Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/post-crawl/node-sdk.git
+cd node-sdk
+
+# Install dependencies
+bun install
+
+# Run tests
+make test
+
+# Run all checks (format, lint, test)
+make check
+
+# Build the package
+make build
 ```
 
-## Environment Variables
+### Available Commands
 
-You can load your API key from environment variables:
+```bash
+make help         # Show all available commands
+make format       # Format code with biome
+make lint         # Run linting and type checking
+make test         # Run test suite
+make check        # Run format, lint, and tests
+make build        # Build distribution packages
+make examples     # Run all examples
+```
 
+## API Key Management
+
+### Environment Variables (Recommended)
+
+Store your API key securely in environment variables:
+
+```bash
+export POSTCRAWL_API_KEY="sk_your_api_key_here"
+```
+
+Or use a `.env` file:
+```bash
+# .env
+POSTCRAWL_API_KEY=sk_your_api_key_here
+```
+
+Then load it in your code:
 ```typescript
-import 'dotenv/config'
-import { PostCrawlClient } from 'postcrawl'
+import { config } from 'dotenv';
+import { PostCrawlClient } from 'postcrawl';
 
+config();
 const client = new PostCrawlClient({
-  apiKey: process.env.POSTCRAWL_API_KEY!,
-})
+  apiKey: process.env.POSTCRAWL_API_KEY!
+});
 ```
 
-## TypeScript Support
+### Security Best Practices
 
-This SDK is written in TypeScript and provides full type definitions. All methods, parameters, and responses are fully typed for an excellent development experience.
+- **Never hardcode API keys** in your source code
+- **Add `.env` to `.gitignore`** to prevent accidental commits
+- **Use environment variables** in production
+- **Rotate keys regularly** through the PostCrawl dashboard
+- **Set key permissions** to limit access to specific operations
 
-## Examples
+## Rate Limits & Credits
 
-### Search Reddit for AI discussions
+PostCrawl uses a credit-based system:
 
+- **Search**: ~1 credit per 10 results
+- **Extract**: ~1 credit per URL (without comments)
+- **Extract with comments**: ~3 credits per URL
+
+Rate limits are tracked automatically:
 ```typescript
-const results = await client.search({
-  socialPlatforms: ['reddit'],
-  query: 'artificial intelligence breakthrough',
-  results: 20,
-  page: 1,
-})
+const client = new PostCrawlClient({ apiKey: 'sk_...' });
+const results = await client.search({ ... });
 
-for (const result of results) {
-  console.log(`${result.title} - ${result.url}`)
-}
+console.log(`Rate limit: ${client.rateLimitInfo.limit}`);
+console.log(`Remaining: ${client.rateLimitInfo.remaining}`);
+console.log(`Reset at: ${client.rateLimitInfo.reset}`);
 ```
-
-### Extract Reddit post with comments
-
-```typescript
-const posts = await client.extract({
-  urls: ['https://www.reddit.com/r/technology/comments/...'],
-  includeComments: true,
-  responseMode: 'raw',
-})
-
-const post = posts[0]
-if (post.raw && post.source === 'reddit') {
-  const redditPost = post.raw as RedditPost
-  console.log(`Post: ${redditPost.title}`)
-  console.log(`Comments: ${redditPost.comments?.length || 0}`)
-}
-```
-
-### Search and extract TikTok videos
-
-```typescript
-const posts = await client.searchAndExtract({
-  socialPlatforms: ['tiktok'],
-  query: '#programming #tutorial',
-  results: 5,
-  page: 1,
-  includeComments: false,
-})
-
-for (const post of posts) {
-  if (post.source === 'tiktok' && post.raw) {
-    const tiktok = post.raw as TiktokPost
-    console.log(`@${tiktok.username}: ${tiktok.description}`)
-  }
-}
-```
-
-## License
-
-MIT - see [LICENSE](LICENSE) for details.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Support
 
-- Documentation: [https://github.com/post-crawl/node-sdk](https://github.com/post-crawl/node-sdk)
-- Issues: [https://github.com/post-crawl/node-sdk/issues](https://github.com/post-crawl/node-sdk/issues)
-- API Documentation: [https://postcrawl.com/docs](https://postcrawl.com/docs)
+- **Documentation**: [github.com/post-crawl/node-sdk](https://github.com/post-crawl/node-sdk)
+- **Issues**: [github.com/post-crawl/node-sdk/issues](https://github.com/post-crawl/node-sdk/issues)
+- **Email**: support@postcrawl.com
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
