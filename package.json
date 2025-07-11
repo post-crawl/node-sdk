@@ -1,0 +1,69 @@
+{
+  "name": "postcrawl",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for PostCrawl - The Fastest LLM Ready Social Media Crawler",
+  "keywords": [
+    "postcrawl",
+    "social-media",
+    "scraping",
+    "reddit",
+    "tiktok",
+    "api",
+    "sdk"
+  ],
+  "homepage": "https://postcrawl.com/",
+  "bugs": {
+    "url": "https://github.com/post-crawl/node-sdk/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/post-crawl/node-sdk.git"
+  },
+  "license": "MIT",
+  "author": "PostCrawl Team <support@postcrawl.com>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "dotenv": "^16.4.5",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.1.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
