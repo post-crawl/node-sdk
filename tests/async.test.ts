@@ -2,14 +2,14 @@
  * Tests for PostCrawl async operations.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, mock } from 'bun:test'
 import { PostCrawlClient } from '../src/client'
 import { TimeoutError } from '../src/exceptions'
 import { apiKey, mockSearchResponse, mockExtractResponse } from './fixtures'
 
 // Mock fetch globally
-const mockFetch = vi.fn()
-global.fetch = mockFetch
+const mockFetch = mock()
+global.fetch = mockFetch as any
 
 describe('TestAsyncOperations', () => {
   beforeEach(() => {

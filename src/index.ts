@@ -25,7 +25,6 @@ export {
   ExtractedPost,
   ExtractRequest,
   ExtractResponse,
-  RedditComment,
   RedditPost,
   ResponseMode,
   SearchAndExtractRequest,
@@ -35,7 +34,6 @@ export {
   SearchResult,
   SocialPlatform,
   SocialPost,
-  TiktokComment,
   TiktokPost,
   createExtractedPost,
 } from './types'

@@ -174,10 +174,4 @@ export interface ErrorResponse {
 }
 
 // Re-export platform-specific types for easy access
-export {
-  RedditPost,
-  RedditComment,
-  TiktokPost,
-  TiktokComment,
-  SearchResult,
-} from './generated-types'
+export type { RedditPost, TiktokPost, SearchResult }

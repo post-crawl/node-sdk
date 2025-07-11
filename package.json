@@ -40,8 +40,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
@@ -60,8 +60,7 @@
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.1.0",
     "tsup": "^8.0.1",
-    "typescript": "^5.3.0",
-    "vitest": "^1.0.0"
+    "typescript": "^5.3.0"
   },
   "engines": {
     "node": ">=18.0.0"

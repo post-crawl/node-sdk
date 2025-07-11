@@ -2,7 +2,7 @@
  * Tests for PostCrawl client functionality.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { PostCrawlClient } from '../src/client'
 import {
   APIError,
@@ -24,8 +24,8 @@ import {
 } from './fixtures'
 
 // Mock fetch globally
-const mockFetch = vi.fn()
-global.fetch = mockFetch
+const mockFetch = mock()
+global.fetch = mockFetch as any
 
 describe('TestClientInitialization', () => {
   it('test valid api key', () => {

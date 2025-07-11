@@ -1,0 +1,12 @@
+[test]
+# Test timeout in milliseconds
+timeout = 30000
+
+# Exclude patterns
+exclude = ["node_modules", "dist"]
+
+# Test file patterns (Bun automatically detects these patterns)
+# *.test.{js|jsx|ts|tsx}
+# *_test.{js|jsx|ts|tsx}
+# *.spec.{js|jsx|ts|tsx}
+# *_spec.{js|jsx|ts|tsx}
