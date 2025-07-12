@@ -12,9 +12,9 @@ Official Node.js/TypeScript SDK for [PostCrawl](https://postcrawl.com) - The Fas
 - 🛡️ **Comprehensive error handling** with detailed exceptions
 - 📈 **Rate limiting** support with credit tracking
 - 🔄 **Automatic retries** for network errors
-- 🎯 **Platform-specific types** for Reddit and TikTok data
+- 🎯 **Platform-specific types** for Reddit and TikTok data with strong typing
 - 📝 **Rich content formatting** with markdown support
-- 🌐 **ESM and CommonJS** support for maximum compatibility
+- 🐍 **Node.js 18+** with modern ES modules and camelCase naming
 
 ## Installation
 
@@ -106,7 +106,30 @@ for (const post of posts) {
 }
 ```
 
+### Search and Extract
+```typescript
+const posts = await client.searchAndExtract({
+  socialPlatforms: ['reddit'],
+  query: 'search query',
+  results: 5,
+  page: 1,
+  includeComments: false,
+  responseMode: 'markdown'
+});
+```
+
 ## API Reference
+
+### Client Initialization
+
+```typescript
+const client = new PostCrawlClient({
+  apiKey: string,           // Required: Your PostCrawl API key (starts with 'sk_')
+  timeout?: number,         // Optional: Request timeout in ms (default: 90000)
+  maxRetries?: number,      // Optional: Max retry attempts (default: 3)
+  retryDelay?: number,      // Optional: Delay between retries in ms (default: 1000)
+})
+```
 
 ### Search
 ```typescript
@@ -142,9 +165,9 @@ const posts = await client.searchAndExtract({
 ## Examples
 
 Check out the `examples/` directory for complete working examples:
-- `search_101.ts` - Basic search functionality demo
-- `extract_101.ts` - Content extraction demo
-- `search_and_extract_101.ts` - Combined operation demo
+- [`search_101.ts`](examples/search_101.ts) - Basic search functionality demo
+- [`extract_101.ts`](examples/extract_101.ts) - Content extraction demo with Reddit and TikTok
+- [`search_and_extract_101.ts`](examples/search_and_extract_101.ts) - Combined operation demo
 
 Run examples with:
 ```bash
