@@ -1,79 +1,105 @@
+#!/usr/bin/env tsx
 /**
- * Basic extract example for PostCrawl SDK
+ * Content extraction example - PostCrawl SDK 101
  */
 
-import 'dotenv/config'
-import { PostCrawlClient, RedditPost, TiktokPost } from '../src'
+import { config } from "dotenv";
+import { PostCrawlClient, isRedditPost, isTiktokPost } from "../src";
 
-async function main() {
-  // Initialize the client
-  const client = new PostCrawlClient({
-    apiKey: process.env.POSTCRAWL_API_KEY || 'sk_your_api_key_here',
-  })
+// Load environment variables from .env file
+config();
 
-  try {
-    // Example URLs (replace with actual URLs)
-    const urls = [
-      'https://www.reddit.com/r/MachineLearning/comments/...',
-      'https://www.tiktok.com/@techexplainer/video/...',
-    ]
+const API_KEY = process.env.POSTCRAWL_API_KEY || "sk_your_api_key_here";
 
-    console.log('Extracting content from URLs...\n')
-
-    const posts = await client.extract({
-      urls,
-      includeComments: true,
-      responseMode: 'raw',
-    })
-
-    // Process each extracted post
-    posts.forEach((post, index) => {
-      console.log(`\n--- Post ${index + 1} ---`)
-      console.log(`URL: ${post.url}`)
-      console.log(`Source: ${post.source}`)
-
-      if (post.error) {
-        console.log(`Error: ${post.error}`)
-        return
-      }
-
-      // Handle Reddit posts
-      if (post.source === 'reddit' && post.raw) {
-        const reddit = post.raw as RedditPost
-        console.log(`\nReddit Post:`)
-        console.log(`  Title: ${reddit.title}`)
-        console.log(`  Subreddit: r/${reddit.subredditName}`)
-        console.log(`  Score: ${reddit.score} (↑${reddit.upvotes} ↓${reddit.downvotes})`)
-        console.log(`  Created: ${new Date(reddit.createdAt).toLocaleString()}`)
-        console.log(`  Content: ${reddit.description.substring(0, 200)}...`)
-        
-        if (reddit.comments && reddit.comments.length > 0) {
-          console.log(`  Comments: ${reddit.comments.length}`)
-          console.log(`  Top comment: "${reddit.comments[0].text.substring(0, 100)}..."`)
-        }
-      }
-
-      // Handle TikTok posts
-      if (post.source === 'tiktok' && post.raw) {
-        const tiktok = post.raw as TiktokPost
-        console.log(`\nTikTok Post:`)
-        console.log(`  Username: @${tiktok.username}`)
-        console.log(`  Description: ${tiktok.description}`)
-        console.log(`  Likes: ${tiktok.likes}`)
-        console.log(`  Comments: ${tiktok.totalComments}`)
-        console.log(`  Hashtags: ${tiktok.hashtags.join(', ')}`)
-        console.log(`  Created: ${new Date(tiktok.createdAt).toLocaleString()}`)
-
-        if (tiktok.comments && tiktok.comments.length > 0) {
-          console.log(`  Top comment: "@${tiktok.comments[0].username}: ${tiktok.comments[0].text}"`)
-        }
-      }
-    })
-
-  } catch (error) {
-    console.error('Error:', error)
-  }
+if (!API_KEY || API_KEY === "sk_your_api_key_here") {
+	console.error("❌ Error: POSTCRAWL_API_KEY environment variable is not set.");
+	console.error("Please set it in your .env file or environment.");
+	process.exit(1);
 }
 
-// Run the example
-main()
+async function main() {
+	// Create client
+	const pc = new PostCrawlClient({ apiKey: API_KEY });
+
+	try {
+		// Extract content from multiple URLs
+		const posts = await pc.extract({
+			urls: [
+				"https://www.reddit.com/r/cs50/comments/1ltbkiq/cs50_python_fjnal_project_ideas/",
+				"https://www.tiktok.com/@britacooks/video/7397065165805473054",
+			],
+			includeComments: true,
+			responseMode: "raw",
+		});
+
+		// Process each extracted post
+		for (const post of posts) {
+			console.log(`\n${"=".repeat(60)}`);
+			console.log(`URL: ${post.url}`);
+			console.log(`Platform: ${post.source}`);
+
+			if (post.error) {
+				console.error(`Error: ${post.error}`);
+				continue;
+			}
+
+			// Handle Reddit posts
+			if (isRedditPost(post.raw)) {
+				console.log("\n📱 Reddit Post:");
+				console.log(`  Subreddit: r/${post.raw.subredditName}`);
+				console.log(`  Title: ${post.raw.title}`);
+				console.log(`  Author: u/${post.raw.name}`);
+				console.log(
+					`  Score: ${post.raw.score} (⬆️ ${post.raw.upvotes} / ⬇️ ${post.raw.downvotes})`,
+				);
+				console.log(`  Created: ${post.raw.createdAt}`);
+
+				if (post.raw.description) {
+					console.log("\n  Content:");
+					console.log(
+						`  ${post.raw.description.substring(0, 200)}${post.raw.description.length > 200 ? "..." : ""}`,
+					);
+				}
+
+				if (post.raw.comments && post.raw.comments.length > 0) {
+					console.log("\n  Top Comments:");
+					post.raw.comments.slice(0, 3).forEach((comment, idx) => {
+						console.log(
+							`    ${idx + 1}. "${comment.text.substring(0, 100)}..." (Score: ${comment.score})`,
+						);
+					});
+				}
+			}
+
+			// Handle TikTok posts
+			if (isTiktokPost(post.raw)) {
+				console.log("\n🎵 TikTok Video:");
+				console.log(`  Username: @${post.raw.username}`);
+				console.log(`  Description: ${post.raw.description}`);
+				console.log(`  Likes: ${post.raw.likes}`);
+				console.log(`  Comments: ${post.raw.totalComments.toLocaleString()}`);
+				console.log(`  Created: ${post.raw.createdAt}`);
+
+				if (post.raw.hashtags && post.raw.hashtags.length > 0) {
+					console.log(
+						`  Hashtags: ${post.raw.hashtags.map((tag) => `#${tag}`).join(" ")}`,
+					);
+				}
+
+				if (post.raw.comments && post.raw.comments.length > 0) {
+					console.log("\n  Top Comments:");
+					post.raw.comments.slice(0, 3).forEach((comment, idx) => {
+						console.log(
+							`    ${idx + 1}. @${comment.username}: "${comment.text.substring(0, 80)}..."`,
+						);
+					});
+				}
+			}
+		}
+	} catch (error) {
+		console.error("Error:", error);
+		process.exit(1);
+	}
+}
+
+main();

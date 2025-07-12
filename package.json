@@ -1,68 +1,74 @@
 {
-  "name": "postcrawl",
-  "version": "1.0.0",
-  "description": "TypeScript SDK for PostCrawl - The Fastest LLM Ready Social Media Crawler",
-  "keywords": [
-    "postcrawl",
-    "social-media",
-    "scraping",
-    "reddit",
-    "tiktok",
-    "api",
-    "sdk"
-  ],
-  "homepage": "https://postcrawl.com/",
-  "bugs": {
-    "url": "https://github.com/post-crawl/node-sdk/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/post-crawl/node-sdk.git"
-  },
-  "license": "MIT",
-  "author": "PostCrawl Team <support@postcrawl.com>",
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "test": "bun test",
-    "test:watch": "bun test --watch",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.tsx",
-    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
-    "prepublishOnly": "bun run build"
-  },
-  "dependencies": {
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/node": "^20.10.0",
-    "@typescript-eslint/eslint-plugin": "^6.13.0",
-    "@typescript-eslint/parser": "^6.13.0",
-    "dotenv": "^16.4.5",
-    "eslint": "^8.55.0",
-    "eslint-config-prettier": "^9.1.0",
-    "prettier": "^3.1.0",
-    "tsup": "^8.0.1",
-    "typescript": "^5.3.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+	"name": "postcrawl",
+	"version": "0.1.0",
+	"description": "Node.js/TypeScript SDK for PostCrawl - The Fastest LLM Ready Social Media Crawler",
+	"keywords": [
+		"postcrawl",
+		"social-media",
+		"scraping",
+		"reddit",
+		"tiktok",
+		"api",
+		"sdk",
+		"typescript",
+		"nodejs"
+	],
+	"homepage": "https://postcrawl.com/",
+	"bugs": {
+		"url": "https://github.com/post-crawl/node-sdk/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/post-crawl/node-sdk.git"
+	},
+	"license": "MIT",
+	"author": "PostCrawl Team <support@postcrawl.com>",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		}
+	},
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"test": "vitest",
+		"test:watch": "vitest --watch",
+		"test:coverage": "vitest --coverage",
+		"typecheck": "tsc --noEmit",
+		"check:biome": "biome check .",
+		"check:types": "tsc --noEmit",
+		"check": "bun run check:biome && bun run check:types && bun run test",
+		"prepublishOnly": "bun run build",
+		"examples": "bun run example:search && bun run example:extract && bun run example:sne",
+		"example:search": "tsx examples/search_101.ts",
+		"example:extract": "tsx examples/extract_101.ts",
+		"example:sne": "tsx examples/search_and_extract_101.ts"
+	},
+	"dependencies": {
+		"zod": "^3.22.4"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.8.3",
+		"@types/node": "^20.10.0",
+		"@vitest/coverage-v8": "^1.0.0",
+		"dotenv": "^16.4.5",
+		"tsup": "^8.0.1",
+		"tsx": "^4.7.0",
+		"typescript": "^5.3.0",
+		"vitest": "^1.0.0"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
 }
