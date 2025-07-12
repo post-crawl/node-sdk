@@ -29,10 +29,10 @@ import {
 import {
 	type ErrorDetail,
 	type ErrorResponse,
+	type ExtractedPost,
 	type ExtractRequest,
 	ExtractRequestSchema,
 	type ExtractResponse,
-	type ExtractedPost,
 	type PostCrawlClientOptions,
 	type RateLimitInfo,
 	type SearchAndExtractRequest,
@@ -100,10 +100,15 @@ export class PostCrawlClient {
 		const remaining = headers.get(RATE_LIMIT_REMAINING_HEADER);
 		const reset = headers.get(RATE_LIMIT_RESET_HEADER);
 
-		if (limit) this.rateLimitInfo.limit = Number.parseInt(limit, 10);
-		if (remaining)
+		if (limit) {
+			this.rateLimitInfo.limit = Number.parseInt(limit, 10);
+		}
+		if (remaining) {
 			this.rateLimitInfo.remaining = Number.parseInt(remaining, 10);
-		if (reset) this.rateLimitInfo.reset = Number.parseInt(reset, 10);
+		}
+		if (reset) {
+			this.rateLimitInfo.reset = Number.parseInt(reset, 10);
+		}
 	}
 
 	private async handleErrorResponse(response: Response): Promise<never> {

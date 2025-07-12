@@ -4,7 +4,7 @@
  */
 
 import { config } from "dotenv";
-import { PostCrawlClient, isRedditPost, isTiktokPost } from "../src";
+import { isRedditPost, isTiktokPost, PostCrawlClient } from "../src";
 
 // Load environment variables from .env file
 config();

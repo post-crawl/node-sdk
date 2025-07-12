@@ -5,10 +5,10 @@
 import { describe, expect, it } from "vitest";
 import {
 	ExtractRequestSchema,
-	SearchAndExtractRequestSchema,
-	SearchRequestSchema,
 	isRedditPost,
 	isTiktokPost,
+	SearchAndExtractRequestSchema,
+	SearchRequestSchema,
 } from "../src/types";
 
 describe("Type Validation", () => {
