@@ -4,7 +4,7 @@
  */
 
 import { config } from "dotenv";
-import { isRedditPost, isTiktokPost, PostCrawlClient } from "../src";
+import { PostCrawlClient, isRedditPost, isTiktokPost } from "../src";
 
 // Load environment variables from .env file
 config();
@@ -19,7 +19,7 @@ if (!API_KEY || API_KEY === "sk_your_api_key_here") {
 
 async function main() {
 	// Create client
-	const client = new PostCrawlClient({ apiKey: API_KEY });
+	const pc = new PostCrawlClient({ apiKey: API_KEY });
 
 	try {
 		console.log(
@@ -27,7 +27,7 @@ async function main() {
 		);
 
 		// Search and extract in one operation
-		const posts = await client.searchAndExtract({
+		const posts = await pc.searchAndExtract({
 			socialPlatforms: ["reddit", "tiktok"],
 			query: "machine learning tutorial",
 			results: 3,

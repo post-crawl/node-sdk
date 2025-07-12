@@ -4,7 +4,7 @@
  */
 
 import { config } from "dotenv";
-import { isRedditPost, isTiktokPost, PostCrawlClient } from "../src";
+import { PostCrawlClient, isRedditPost, isTiktokPost } from "../src";
 
 // Load environment variables from .env file
 config();
@@ -19,11 +19,11 @@ if (!API_KEY || API_KEY === "sk_your_api_key_here") {
 
 async function main() {
 	// Create client
-	const client = new PostCrawlClient({ apiKey: API_KEY });
+	const pc = new PostCrawlClient({ apiKey: API_KEY });
 
 	try {
 		// Extract content from multiple URLs
-		const posts = await client.extract({
+		const posts = await pc.extract({
 			urls: [
 				"https://www.reddit.com/r/cs50/comments/1ltbkiq/cs50_python_fjnal_project_ideas/",
 				"https://www.tiktok.com/@britacooks/video/7397065165805473054",

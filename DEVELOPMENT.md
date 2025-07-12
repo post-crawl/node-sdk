@@ -222,7 +222,7 @@ DEBUG=postcrawl:* bun run test
 To test against a local PostCrawl API:
 
 ```typescript
-const client = new PostCrawlClient({
+const pc = new PostCrawlClient({
   apiKey: 'sk_test',
   baseUrl: 'http://localhost:8787'
 });

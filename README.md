@@ -64,12 +64,12 @@ bun add dotenv
 import { PostCrawlClient } from 'postcrawl';
 
 // Initialize the client with your API key
-const client = new PostCrawlClient({
+const pc = new PostCrawlClient({
   apiKey: 'sk_your_api_key_here'
 });
 
 // Search for content
-const results = await client.search({
+const results = await pc.search({
   socialPlatforms: ['reddit'],
   query: 'machine learning',
   results: 10,
@@ -87,7 +87,7 @@ for (const post of results) {
 ### Extract Content
 ```typescript
 // Extract content from URLs
-const posts = await client.extract({
+const posts = await pc.extract({
   urls: [
     'https://reddit.com/r/...',
     'https://tiktok.com/@...'
@@ -108,7 +108,7 @@ for (const post of posts) {
 
 ### Search and Extract
 ```typescript
-const posts = await client.searchAndExtract({
+const posts = await pc.searchAndExtract({
   socialPlatforms: ['reddit'],
   query: 'search query',
   results: 5,
@@ -123,7 +123,7 @@ const posts = await client.searchAndExtract({
 ### Client Initialization
 
 ```typescript
-const client = new PostCrawlClient({
+const pc = new PostCrawlClient({
   apiKey: string,           // Required: Your PostCrawl API key (starts with 'sk_')
   timeout?: number,         // Optional: Request timeout in ms (default: 90000)
   maxRetries?: number,      // Optional: Max retry attempts (default: 3)
@@ -133,7 +133,7 @@ const client = new PostCrawlClient({
 
 ### Search
 ```typescript
-const results = await client.search({
+const results = await pc.search({
   socialPlatforms: ['reddit', 'tiktok'],
   query: 'your search query',
   results: 10,  // 1-100
@@ -143,7 +143,7 @@ const results = await client.search({
 
 ### Extract
 ```typescript
-const posts = await client.extract({
+const posts = await pc.extract({
   urls: ['https://reddit.com/...', 'https://tiktok.com/...'],
   includeComments: true,
   responseMode: 'raw'  // or 'markdown'
@@ -152,7 +152,7 @@ const posts = await client.extract({
 
 ### Search and Extract
 ```typescript
-const posts = await client.searchAndExtract({
+const posts = await pc.searchAndExtract({
   socialPlatforms: ['reddit'],
   query: 'search query',
   results: 5,
@@ -208,7 +208,7 @@ The SDK provides type-safe access to platform-specific data:
 import { PostCrawlClient, isRedditPost, isTiktokPost } from 'postcrawl';
 
 // Extract content with proper type handling
-const posts = await client.extract({
+const posts = await pc.extract({
   urls: ['https://reddit.com/...']
 });
 
@@ -249,7 +249,7 @@ import {
 } from 'postcrawl';
 
 try {
-  const results = await client.search({ ... });
+  const results = await pc.search({ ... });
 } catch (error) {
   if (error instanceof AuthenticationError) {
     console.error('Invalid API key');
@@ -321,7 +321,7 @@ import { config } from 'dotenv';
 import { PostCrawlClient } from 'postcrawl';
 
 config();
-const client = new PostCrawlClient({
+const pc = new PostCrawlClient({
   apiKey: process.env.POSTCRAWL_API_KEY!
 });
 ```
@@ -344,12 +344,12 @@ PostCrawl uses a credit-based system:
 
 Rate limits are tracked automatically:
 ```typescript
-const client = new PostCrawlClient({ apiKey: 'sk_...' });
-const results = await client.search({ ... });
+const pc = new PostCrawlClient({ apiKey: 'sk_...' });
+const results = await pc.search({ ... });
 
-console.log(`Rate limit: ${client.rateLimitInfo.limit}`);
-console.log(`Remaining: ${client.rateLimitInfo.remaining}`);
-console.log(`Reset at: ${client.rateLimitInfo.reset}`);
+console.log(`Rate limit: ${pc.rateLimitInfo.limit}`);
+console.log(`Remaining: ${pc.rateLimitInfo.remaining}`);
+console.log(`Reset at: ${pc.rateLimitInfo.reset}`);
 ```
 
 ## Support

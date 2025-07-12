@@ -19,11 +19,11 @@ if (!API_KEY || API_KEY === "sk_your_api_key_here") {
 
 async function main() {
 	// Create client
-	const client = new PostCrawlClient({ apiKey: API_KEY });
+	const pc = new PostCrawlClient({ apiKey: API_KEY });
 
 	try {
 		// Search Reddit and TikTok
-		const results = await client.search({
+		const results = await pc.search({
 			socialPlatforms: ["reddit", "tiktok"],
 			query: "python",
 			results: 5,
@@ -51,9 +51,9 @@ async function main() {
 
 		// Show rate limit info
 		console.log("\nRate Limit Info:");
-		console.log(`  Limit: ${client.rateLimitInfo.limit}`);
-		console.log(`  Remaining: ${client.rateLimitInfo.remaining}`);
-		console.log(`  Reset: ${client.rateLimitInfo.reset}`);
+		console.log(`  Limit: ${pc.rateLimitInfo.limit}`);
+		console.log(`  Remaining: ${pc.rateLimitInfo.remaining}`);
+		console.log(`  Reset: ${pc.rateLimitInfo.reset}`);
 	} catch (error) {
 		console.error("Error:", error);
 		process.exit(1);
