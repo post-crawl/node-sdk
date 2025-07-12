@@ -63,12 +63,12 @@ bun add dotenv
 import { PostCrawlClient } from 'postcrawl'
 
 // Initialize the client
-const client = new PostCrawlClient({
+const pc = new PostCrawlClient({
   apiKey: 'sk_your_api_key_here',
 })
 
 // Search for content
-const searchResults = await client.search({
+const searchResults = await pc.search({
   socialPlatforms: ['reddit', 'tiktok'],
   query: 'artificial intelligence',
   results: 10,
@@ -76,7 +76,7 @@ const searchResults = await client.search({
 })
 
 // Extract content from URLs
-const posts = await client.extract({
+const posts = await pc.extract({
   urls: [
     'https://www.reddit.com/r/technology/comments/...',
     'https://www.tiktok.com/@user/video/...',
@@ -85,7 +85,7 @@ const posts = await client.extract({
 })
 
 // Search and extract in one operation
-const extractedPosts = await client.searchAndExtract({
+const extractedPosts = await pc.searchAndExtract({
   socialPlatforms: ['reddit'],
   query: 'machine learning tutorials',
   results: 5,
@@ -99,7 +99,7 @@ const extractedPosts = await client.searchAndExtract({
 ### Client Initialization
 
 ```typescript
-const client = new PostCrawlClient({
+const pc = new PostCrawlClient({
   apiKey: string,           // Required: Your PostCrawl API key (starts with 'sk_')
   timeout?: number,         // Optional: Request timeout in ms (default: 90000)
   maxRetries?: number,      // Optional: Max retry attempts (default: 3)
@@ -112,7 +112,7 @@ const client = new PostCrawlClient({
 Search for content across social media platforms.
 
 ```typescript
-const results = await client.search({
+const results = await pc.search({
   socialPlatforms: ['reddit', 'tiktok'],  // Platforms to search
   query: 'your search query',             // Search query
   results: 10,                            // Number of results (max 100)
@@ -134,7 +134,7 @@ const results = await client.search({
 Extract content from social media URLs.
 
 ```typescript
-const posts = await client.extract({
+const posts = await pc.extract({
   urls: ['url1', 'url2'],           // URLs to extract (max 100)
   includeComments?: boolean,        // Include comments (default: false)
   responseMode?: 'raw' | 'markdown' // Response format (default: 'raw')
@@ -155,7 +155,7 @@ const posts = await client.extract({
 Combine search and extraction in a single operation.
 
 ```typescript
-const posts = await client.searchAndExtract({
+const posts = await pc.searchAndExtract({
   socialPlatforms: ['reddit', 'tiktok'],
   query: 'your search query',
   results: 10,
@@ -215,7 +215,7 @@ import {
 } from 'postcrawl'
 
 try {
-  const results = await client.search({...})
+  const results = await pc.search({...})
 } catch (error) {
   if (error instanceof AuthenticationError) {
     console.error('Invalid API key')
@@ -235,7 +235,7 @@ The client automatically tracks rate limit information:
 
 ```typescript
 // After any API call
-console.log(client.rateLimitInfo)
+console.log(pc.rateLimitInfo)
 // {
 //   limit: 200,
 //   remaining: 199,
@@ -251,7 +251,7 @@ You can load your API key from environment variables:
 import 'dotenv/config'
 import { PostCrawlClient } from 'postcrawl'
 
-const client = new PostCrawlClient({
+const pc = new PostCrawlClient({
   apiKey: process.env.POSTCRAWL_API_KEY!,
 })
 ```
@@ -265,7 +265,7 @@ This SDK is written in TypeScript and provides full type definitions. All method
 ### Search Reddit for AI discussions
 
 ```typescript
-const results = await client.search({
+const results = await pc.search({
   socialPlatforms: ['reddit'],
   query: 'artificial intelligence breakthrough',
   results: 20,
@@ -280,7 +280,7 @@ for (const result of results) {
 ### Extract Reddit post with comments
 
 ```typescript
-const posts = await client.extract({
+const posts = await pc.extract({
   urls: ['https://www.reddit.com/r/technology/comments/...'],
   includeComments: true,
   responseMode: 'raw',
@@ -297,7 +297,7 @@ if (post.raw && post.source === 'reddit') {
 ### Search and extract TikTok videos
 
 ```typescript
-const posts = await client.searchAndExtract({
+const posts = await pc.searchAndExtract({
   socialPlatforms: ['tiktok'],
   query: '#programming #tutorial',
   results: 5,
