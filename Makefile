@@ -28,6 +28,10 @@ help:
 	@echo "  make clean        Clean build artifacts"
 	@echo "  make verify       Verify package (dry run)"
 	@echo "  make publish      Publish to npm (requires login)"
+	@echo "  make release      Full release process (test, build, publish)"
+	@echo "  make version-patch Bump patch version (1.0.0 -> 1.0.1)"
+	@echo "  make version-minor Bump minor version (1.0.0 -> 1.1.0)"
+	@echo "  make version-major Bump major version (1.0.0 -> 2.0.0)"
 	@echo ""
 	@echo "Type Generation:"
 	@echo "  make generate-types Regenerate types from OpenAPI"
@@ -111,8 +115,28 @@ build: clean
 
 # Verify package before publishing (dry run)
 verify: build
-	npm publish --dry-run
+	bun publish --dry-run
 
 # Publish to npm (production)
 publish: build
-	npm publish
+	bun publish --access public
+
+# Version management
+version-patch:
+	bun run version:patch
+
+version-minor:
+	bun run version:minor
+
+version-major:
+	bun run version:major
+
+# Full release process
+release: check build
+	@echo "Running full release process..."
+	@echo "1. All checks passed ✓"
+	@echo "2. Build complete ✓"
+	@echo "3. Ready to publish"
+	@echo ""
+	@echo "To publish, run: make publish"
+	@echo "Or to create a new version first: make version-<patch|minor|major>"
