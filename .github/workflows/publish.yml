@@ -40,9 +40,10 @@ jobs:
           tar -tzf postcrawl-*.tgz | head -20
       
       - name: Publish to npm
-        run: bun publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
       
       - name: Upload package to release
         uses: softprops/action-gh-release@v2
