@@ -176,7 +176,12 @@ export class PostCrawlClient {
 	): Promise<T> {
 		const url = `${this.baseUrl}/${API_VERSION}${endpoint}`;
 		const controller = new AbortController();
-		const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+		let timeoutId: NodeJS.Timeout | undefined;
+
+		// Only set timeout if it's greater than 0
+		if (this.timeout > 0) {
+			timeoutId = setTimeout(() => controller.abort(), this.timeout);
+		}
 
 		try {
 			const response = await fetch(url, {
@@ -190,7 +195,9 @@ export class PostCrawlClient {
 				signal: controller.signal,
 			});
 
-			clearTimeout(timeoutId);
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
 
 			// Update rate limit info
 			this.updateRateLimitInfo(response.headers);
@@ -202,7 +209,9 @@ export class PostCrawlClient {
 
 			return (await response.json()) as T;
 		} catch (error) {
-			clearTimeout(timeoutId);
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
 
 			if (error instanceof Error && error.name === "AbortError") {
 				throw new TimeoutError("Request timed out", error);

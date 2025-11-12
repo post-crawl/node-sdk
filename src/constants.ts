@@ -12,7 +12,7 @@ export const EXTRACT_ENDPOINT = "/extract";
 export const SEARCH_AND_EXTRACT_ENDPOINT = "/search-and-extract";
 
 // Request defaults
-export const DEFAULT_TIMEOUT = 90000; // 90 seconds in milliseconds
+export const DEFAULT_TIMEOUT = 0; // No timeout
 export const DEFAULT_MAX_RETRIES = 3;
 export const DEFAULT_RETRY_DELAY = 1000; // 1 second in milliseconds
 

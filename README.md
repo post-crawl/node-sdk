@@ -125,7 +125,7 @@ const posts = await pc.searchAndExtract({
 ```typescript
 const pc = new PostCrawlClient({
   apiKey: string,           // Required: Your PostCrawl API key (starts with 'sk_')
-  timeout?: number,         // Optional: Request timeout in ms (default: 90000)
+  timeout?: number,         // Optional: Request timeout in ms (default: 0 = no timeout)
   maxRetries?: number,      // Optional: Max retry attempts (default: 3)
   retryDelay?: number,      // Optional: Delay between retries in ms (default: 1000)
 })
