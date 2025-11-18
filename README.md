@@ -93,7 +93,11 @@ const posts = await pc.extract({
     'https://tiktok.com/@...'
   ],
   includeComments: true,
-  responseMode: 'raw'
+  responseMode: 'raw',
+  commentFilterConfig: {
+    min_score: 10,
+    max_depth: 2
+  }
 });
 
 // Process extracted posts
@@ -113,8 +117,12 @@ const posts = await pc.searchAndExtract({
   query: 'search query',
   results: 5,
   page: 1,
-  includeComments: false,
-  responseMode: 'markdown'
+  includeComments: true,
+  responseMode: 'markdown',
+  commentFilterConfig: {
+    tier_limits: { "0": 5, "1": 3 },
+    preserve_high_quality_threads: true
+  }
 });
 ```
 
@@ -157,8 +165,40 @@ const posts = await pc.searchAndExtract({
   query: 'search query',
   results: 5,
   page: 1,
-  includeComments: false,
-  responseMode: 'markdown'
+  includeComments: true,
+  responseMode: 'markdown',
+  commentFilterConfig: { ... }
+});
+```
+
+### Comment Filtering
+The `commentFilterConfig` object allows you to filter comments server-side to reduce data transfer and improve performance:
+
+```typescript
+const posts = await pc.extract({
+  urls: ['...'],
+  includeComments: true,
+  commentFilterConfig: {
+    // Limit comments by depth level
+    tier_limits: {
+      "0": 10, // Max 10 top-level comments
+      "1": 5,  // Max 5 replies per comment
+      "2": 2   // Max 2 nested replies
+    },
+    
+    // Minimum score/likes threshold
+    min_score: 10,
+    
+    // Minimum quality relative to top comment (0.0-1.0)
+    top_comment_percentile: 0.1,
+    
+    // Maximum depth to traverse
+    max_depth: 5,
+    
+    // Preserve more replies for high-quality threads
+    preserve_high_quality_threads: true,
+    high_quality_thread_score: 100
+  }
 });
 ```
 
