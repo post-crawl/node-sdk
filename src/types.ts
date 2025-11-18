@@ -22,7 +22,6 @@ export type {
 export const SocialPlatformSchema = z.enum(["reddit", "tiktok"]);
 export type SocialPlatform = z.infer<typeof SocialPlatformSchema>;
 
-
 export const ResponseModeSchema = z.enum(["raw", "markdown"]);
 export type ResponseMode = z.infer<typeof ResponseModeSchema>;
 
