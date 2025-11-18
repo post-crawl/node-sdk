@@ -321,6 +321,7 @@ export class PostCrawlClient {
 			urls: validatedParams.urls,
 			include_comments: validatedParams.includeComments,
 			response_mode: validatedParams.responseMode,
+			comment_filter_config: validatedParams.commentFilterConfig,
 		};
 
 		// Make request
@@ -371,6 +372,7 @@ export class PostCrawlClient {
 			page: validatedParams.page,
 			include_comments: validatedParams.includeComments,
 			response_mode: validatedParams.responseMode,
+			comment_filter_config: validatedParams.commentFilterConfig,
 		};
 
 		// Make request

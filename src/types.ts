@@ -22,8 +22,20 @@ export type {
 export const SocialPlatformSchema = z.enum(["reddit", "tiktok"]);
 export type SocialPlatform = z.infer<typeof SocialPlatformSchema>;
 
+
 export const ResponseModeSchema = z.enum(["raw", "markdown"]);
 export type ResponseMode = z.infer<typeof ResponseModeSchema>;
+
+export const CommentFilterConfigSchema = z.object({
+	tier_limits: z.record(z.string(), z.number()).optional(),
+	min_score: z.number().int().optional(),
+	top_comment_percentile: z.number().min(0).max(1).optional(),
+	max_depth: z.number().int().positive().optional(),
+	preserve_high_quality_threads: z.boolean().optional(),
+	high_quality_thread_score: z.number().int().optional(),
+});
+
+export type CommentFilterConfig = z.infer<typeof CommentFilterConfigSchema>;
 
 // Request Schemas
 export const SearchRequestSchema = z.object({
@@ -44,6 +56,7 @@ export const ExtractRequestSchema = z.object({
 		.max(100, "Cannot process more than 100 URLs at once"),
 	includeComments: z.boolean().optional().default(false),
 	responseMode: ResponseModeSchema.optional().default("raw"),
+	commentFilterConfig: CommentFilterConfigSchema.optional(),
 });
 
 export type ExtractRequest = z.infer<typeof ExtractRequestSchema>;
@@ -57,6 +70,7 @@ export const SearchAndExtractRequestSchema = z.object({
 	page: z.number().int().min(1),
 	includeComments: z.boolean().optional().default(false),
 	responseMode: ResponseModeSchema.optional().default("raw"),
+	commentFilterConfig: CommentFilterConfigSchema.optional(),
 });
 
 export type SearchAndExtractRequest = z.infer<
